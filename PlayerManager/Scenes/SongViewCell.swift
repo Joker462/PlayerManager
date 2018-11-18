@@ -16,7 +16,7 @@ final class SongViewCell: UICollectionViewCell {
     
     func display(_ anyItem: Any?) {
         if let song = anyItem as? Song {
-            pictureImageView.image = song.getImage(with: CGSize(width: 64, height: 64))
+            pictureImageView.image = song.getImage(with: CGSize(width: bounds.width, height: bounds.width))
             nameLabel.text = song.name
         }
     }

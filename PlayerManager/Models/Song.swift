@@ -9,12 +9,19 @@
 import Foundation
 import MediaPlayer
 
-struct Song {
+final class Song {
+    
+    enum StatusState {
+        case unknown, readyToPlay, error
+    }
+    
     // Properties
     let id: NSNumber
     let name: String
     let albumName: String
     let artistName: String
+    var url: URL?
+    var status: StatusState = .unknown
     private var artWork: MPMediaItemArtwork?
     
     // Constructions
@@ -24,6 +31,7 @@ struct Song {
         albumName = mediaItem.albumTitle ?? ""
         artistName = mediaItem.artist ?? ""
         artWork = mediaItem.artwork
+        url = mediaItem.assetURL
     }
     
     // Methods
