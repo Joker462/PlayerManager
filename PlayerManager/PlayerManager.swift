@@ -18,9 +18,11 @@ final class PlayerManager: NSObject {
     // Properties
     var songListLocal: [Song] = []
     
+    // Player properties
     var playError: ((_ error: String?)->())?
     fileprivate var playerItemContext = 0
-
+    fileprivate var playingIndex: Int = -1
+    
     // Constructions
     private override init() {
         super.init()
@@ -35,12 +37,14 @@ private extension PlayerManager {
     func checkAuthorization() {
         switch MPMediaLibrary.authorizationStatus() {
         case .authorized:
+            playingInSlientMode()
             loadSongListLocal()
             break
         default:
             // request authorization
             MPMediaLibrary.requestAuthorization { (status) in
                 if status == .authorized {
+                    self.playingInSlientMode()
                     self.loadSongListLocal()
                 }
             }
@@ -57,12 +61,23 @@ private extension PlayerManager {
             songListLocal.append(Song(mediaItem))
         }
     }
+    
+    private func playingInSlientMode() {
+        //Set the audio session to playback to ignore mute switch on device
+        do {
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
 }
 
 
 // MARK: - Play -
 extension PlayerManager {
     func playMedia(at index: Int) {
+        playingIndex = index
         let song = songListLocal[index]
         guard let url = song.url else { return }
         let asset = AVAsset(url: url)
@@ -95,12 +110,25 @@ extension PlayerManager {
         }
         
         switch status {
-        case .failed:
-            break
         case .readyToPlay:
+            songListLocal[playingIndex].status = .readyToPlay
+            player?.play()
             break
-        case .unknown:
+        default:
+            songListLocal[playingIndex].status = .error
+            playError?("Media file failed")
             break
         }
+    }
+}
+
+// MARK: - Utils -
+extension PlayerManager {
+    func pause(at index: Int) {
+        player?.pause()
+    }
+    
+    func resume(at index: Int) {
+        player?.play()
     }
 }
